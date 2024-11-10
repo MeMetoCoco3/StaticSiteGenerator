@@ -1,14 +1,23 @@
+from typing import Union
+
+
 class HTMLnode:
-    def __init__(self, tag=None, value=None, children=None, props=None) -> None:
+    def __init__(
+        self,
+        tag: str = "",
+        value: str = "",
+        children: list[Union["LeafNode", "ParentNode"]] | None = None,
+        props: dict[str, str] | None = None,
+    ) -> None:
         self.tag = tag
         self.value = value
         self.children = children
-        self.props = props
+        self.props = props if props is not None else {}
 
     def to_html(self):
         raise NotImplementedError
 
-    def props_to_html(self):
+    def props_to_html(self) -> str:
         s = ""
         for key, value in self.props.items():
             s += f' {key}="{value}"'
@@ -18,19 +27,43 @@ class HTMLnode:
         return f"{self.tag}, {self.value}, {self.children}, {self.props}"
 
 
+class ParentNode(HTMLnode):
+    def __init__(
+        self,
+        tag: str,
+        children: list[Union["LeafNode", "ParentNode"]],
+        props: dict[str, str] | None = None,
+    ) -> None:
+        super().__init__(tag, children=children, props=props)
+
+    def to_html(self) -> str:
+        if self.tag is None or self.children is None:
+            raise ValueError("Parent Node does not have a children")
+        result = f"<{self.tag}>"
+        while self.children:
+            result += self.children[0].to_html()
+            del self.children[0]
+
+        result += f"</{self.tag}>"
+        return result
+
+
 class LeafNode(HTMLnode):
-    def __init__(self, tag, value, props=None) -> None:
+    def __init__(
+        self, tag: str, value: str, props: dict[str, str] | None = None
+    ) -> None:
         # Cuidado aqui con el orden, que el HTMLnode acepta 4 argumentos, y
         # le he estado pasado props, como children, desde hace 20 mins.
         super().__init__(tag, value, props=props)
 
-    def to_html(self):
-        # A leaf must have a value
+    def to_html(self) -> str:
         if self.value is None:
-            raise ValueError
+            raise ValueError("Leaf node does not have a value")
 
-        if self.tag is None:
+        if self.tag == "":
             return self.value
+        if self.tag == "img":
+            return f"<{self.tag}{self.props_to_html()}>"
 
         if self.props is None:
             return f"<{self.tag}>{self.value}</{self.tag}>"
@@ -41,4 +74,5 @@ def main():
     pass
 
 
-main()
+if __name__ == "__main__":
+    main()
