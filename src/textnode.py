@@ -1,5 +1,6 @@
 from enum import Enum
 from htmlnode import LeafNode
+from extract import extract_markdown_links, extract_markdown_images
 
 
 class TextType(Enum):
@@ -61,6 +62,17 @@ def split_nodes_delimiter(
             else:
                 new_nodes.append(TextNode(text, TextType.NORMAL))
     return new_nodes
+
+
+def split_nodes_images(old_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes = []
+    for node in old_nodes:
+        image_nodes = extract_markdown_images(node.text)
+        for image_node in image_nodes:
+            delimiter = f"{image_node[0]}{image_node[1]}"
+            if delimiter not in node.text:
+                continue
+            split_node = node.text.split(delimiter)
 
 
 def main():
