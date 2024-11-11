@@ -1,6 +1,13 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter
+from textnode import (
+    TextNode,
+    TextType,
+    split_nodes_images,
+    split_nodes_links,
+    text_node_to_html_node,
+    split_nodes_delimiter,
+)
 
 
 class TestTextNode(unittest.TestCase):
@@ -91,6 +98,40 @@ class TestTextNode(unittest.TestCase):
             TextNode(" word", TextType.NORMAL),
         ]
         self.assertEqual(sn4, r4)
+
+    def test_split_nodes_images(self):
+        n1 = TextNode(
+            "This is text with a link ![to boot dev](https://www.boot.dev) and ![to youtube](https://www.youtube.com/@bootdotdev) abcd",
+            TextType.NORMAL,
+        )
+        sn1 = split_nodes_images([n1])
+        r1 = [
+            TextNode("This is text with a link ", TextType.NORMAL),
+            TextNode("to boot dev", TextType.IMAGES, "https://www.boot.dev"),
+            TextNode(" and ", TextType.NORMAL),
+            TextNode(
+                "to youtube", TextType.IMAGES, "https://www.youtube.com/@bootdotdev"
+            ),
+            TextNode(" abcd", TextType.NORMAL),
+        ]
+        self.assertEqual(sn1, r1)
+
+    def test_split_nodes_links(self):
+        n1 = TextNode(
+            "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev) abcd",
+            TextType.NORMAL,
+        )
+        sn1 = split_nodes_links([n1])
+        r1 = [
+            TextNode("This is text with a link ", TextType.NORMAL),
+            TextNode("to boot dev", TextType.LINKS, "https://www.boot.dev"),
+            TextNode(" and ", TextType.NORMAL),
+            TextNode(
+                "to youtube", TextType.LINKS, "https://www.youtube.com/@bootdotdev"
+            ),
+            TextNode(" abcd", TextType.NORMAL),
+        ]
+        self.assertEqual(sn1, r1)
 
 
 if __name__ == "__main__":

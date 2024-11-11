@@ -68,11 +68,38 @@ def split_nodes_images(old_nodes: list[TextNode]) -> list[TextNode]:
     new_nodes = []
     for node in old_nodes:
         image_nodes = extract_markdown_images(node.text)
-        for image_node in image_nodes:
-            delimiter = f"{image_node[0]}{image_node[1]}"
-            if delimiter not in node.text:
-                continue
-            split_node = node.text.split(delimiter)
+        cursor = 0
+        for alt_text, link in image_nodes:
+            i_formated = f"![{alt_text}]({link})"
+            start_image = node.text.find(i_formated, cursor)
+            if start_image > cursor:
+                new_nodes.append(
+                    TextNode(node.text[cursor:start_image], TextType.NORMAL)
+                )
+            new_nodes.append(TextNode(alt_text, TextType.IMAGES, link))
+            cursor = start_image + len(i_formated)
+        if len(node.text) > cursor:
+            new_nodes.append(TextNode(node.text[cursor:], TextType.NORMAL))
+    return new_nodes
+
+
+def split_nodes_links(old_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes = []
+    for node in old_nodes:
+        url_nodes = extract_markdown_links(node.text)
+        cursor = 0
+        for alt_text, link in url_nodes:
+            i_formated = f"[{alt_text}]({link})"
+            start_image = node.text.find(i_formated, cursor)
+            if start_image > cursor:
+                new_nodes.append(
+                    TextNode(node.text[cursor:start_image], TextType.NORMAL)
+                )
+            new_nodes.append(TextNode(alt_text, TextType.LINKS, link))
+            cursor = start_image + len(i_formated)
+        if len(node.text) > cursor:
+            new_nodes.append(TextNode(node.text[cursor:], TextType.NORMAL))
+    return new_nodes
 
 
 def main():
