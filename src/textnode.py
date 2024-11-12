@@ -31,6 +31,17 @@ class TextNode:
         return f"TextNode({self.text}, {self.text_type}, {self.url})"
 
 
+def text_to_nodes(text: str) -> list[TextNode]:
+    node = [TextNode(text, TextType.NORMAL)]
+
+    node = split_nodes_delimiter(node, "**", TextType.BOLD)
+    node = split_nodes_delimiter(node, "*", TextType.ITALIC)
+    node = split_nodes_delimiter(node, "`", TextType.CODE)
+    node = split_nodes_images(node)
+    node = split_nodes_links(node)
+    return node
+
+
 def text_node_to_html_node(node: TextNode) -> LeafNode:
     match node.text_type:
         case TextType.NORMAL:
@@ -69,41 +80,49 @@ def split_nodes_images(old_nodes: list[TextNode]) -> list[TextNode]:
     for node in old_nodes:
         image_nodes = extract_markdown_images(node.text)
         cursor = 0
+
+        if node.text_type == TextType.IMAGES or not image_nodes:
+            new_nodes.append(node)
+            continue
         for alt_text, link in image_nodes:
             i_formated = f"![{alt_text}]({link})"
             start_image = node.text.find(i_formated, cursor)
             if start_image > cursor:
                 new_nodes.append(
-                    TextNode(node.text[cursor:start_image], TextType.NORMAL)
+                    TextNode(node.text[cursor:start_image], node.text_type)
                 )
             new_nodes.append(TextNode(alt_text, TextType.IMAGES, link))
             cursor = start_image + len(i_formated)
         if len(node.text) > cursor:
-            new_nodes.append(TextNode(node.text[cursor:], TextType.NORMAL))
+            new_nodes.append(TextNode(node.text[cursor:], node.text_type))
     return new_nodes
 
 
 def split_nodes_links(old_nodes: list[TextNode]) -> list[TextNode]:
     new_nodes = []
     for node in old_nodes:
+        # Skip if it's already an image node
+        if node.text_type == TextType.IMAGES:
+            new_nodes.append(node)
+            continue
+
         url_nodes = extract_markdown_links(node.text)
         cursor = 0
         for alt_text, link in url_nodes:
             i_formated = f"[{alt_text}]({link})"
-            start_image = node.text.find(i_formated, cursor)
-            if start_image > cursor:
-                new_nodes.append(
-                    TextNode(node.text[cursor:start_image], TextType.NORMAL)
-                )
+            start_link = node.text.find(i_formated, cursor)
+            if start_link > cursor:
+                new_nodes.append(TextNode(node.text[cursor:start_link], node.text_type))
             new_nodes.append(TextNode(alt_text, TextType.LINKS, link))
-            cursor = start_image + len(i_formated)
+            cursor = start_link + len(i_formated)
         if len(node.text) > cursor:
-            new_nodes.append(TextNode(node.text[cursor:], TextType.NORMAL))
+            new_nodes.append(TextNode(node.text[cursor:], node.text_type))
     return new_nodes
 
 
 def main():
-    pass
+    n3 = "Let's include an image of this ![Sunset](https://i.imgur.com/uYVqVdL.jpeg) and the beautiful Earth: ![Earth Image](https://i.imgur.com/ExQH6XE.jpeg)"
+    print(text_to_nodes(n3))
 
 
 main()

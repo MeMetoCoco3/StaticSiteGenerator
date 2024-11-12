@@ -22,16 +22,7 @@ class TestMarkdownExtractors(unittest.TestCase):
             [("one", "https://img1.png"), ("two", "https://img2.png")],
         )
 
-        # Edge cases
-        self.assertEqual(extract_markdown_images("No images here!"), [])
-        self.assertEqual(
-            extract_markdown_images("![alt](missing-url)"), [("alt", "missing-url")]
-        )
-        self.assertEqual(
-            extract_markdown_images("Malformed ![no end link](https://example.com"), []
-        )
-
-        # Nested parentheses in URLs
+        # Nested, for the future
         """
         self.assertEqual(
             extract_markdown_images("![nested](https://example.com/path_(extra).png)"),

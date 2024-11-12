@@ -7,6 +7,7 @@ from textnode import (
     split_nodes_links,
     text_node_to_html_node,
     split_nodes_delimiter,
+    text_to_nodes,
 )
 
 
@@ -131,7 +132,64 @@ class TestTextNode(unittest.TestCase):
             ),
             TextNode(" abcd", TextType.NORMAL),
         ]
+
         self.assertEqual(sn1, r1)
+
+    def test_text_to_node(self):
+        n1 = "You can also use `inline code` to highlight specific parts of the text."
+        n2 = "Here's an [example link](https://example.com) to a website."
+        n3 = "Let's include an image of this ![Sunset](https://i.imgur.com/uYVqVdL.jpeg) and the beautiful Earth: ![Earth Image](https://i.imgur.com/ExQH6XE.jpeg)"
+        n4 = "Now, let's add a mix of formats: Here's **bold**, *italic*, and a `code snippet` in a single line."
+        n5 = "Finally, some closing text with another [helpful link](https://openai.com)."
+
+        sn1 = text_to_nodes(n1)
+        sn2 = text_to_nodes(n2)
+        sn3 = text_to_nodes(n3)
+        sn4 = text_to_nodes(n4)
+        sn5 = text_to_nodes(n5)
+
+        r1 = [
+            TextNode("You can also use ", TextType.NORMAL),
+            TextNode("inline code", TextType.CODE),
+            TextNode(" to highlight specific parts of the text.", TextType.NORMAL),
+        ]
+
+        r2 = [
+            TextNode("Here's an ", TextType.NORMAL),
+            TextNode("example link", TextType.LINKS, "https://example.com"),
+            TextNode(" to a website.", TextType.NORMAL),
+        ]
+
+        r3 = [
+            TextNode("Let's include an image of this ", TextType.NORMAL),
+            TextNode("Sunset", TextType.IMAGES, "https://i.imgur.com/uYVqVdL.jpeg"),
+            TextNode(" and the beautiful Earth: ", TextType.NORMAL),
+            TextNode(
+                "Earth Image", TextType.IMAGES, "https://i.imgur.com/ExQH6XE.jpeg"
+            ),
+        ]
+
+        r4 = [
+            TextNode("Now, let's add a mix of formats: Here's ", TextType.NORMAL),
+            TextNode("bold", TextType.BOLD),
+            TextNode(", ", TextType.NORMAL),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(", and a ", TextType.NORMAL),
+            TextNode("code snippet", TextType.CODE),
+            TextNode(" in a single line.", TextType.NORMAL),
+        ]
+
+        r5 = [
+            TextNode("Finally, some closing text with another ", TextType.NORMAL),
+            TextNode("helpful link", TextType.LINKS, "https://openai.com"),
+            TextNode(".", TextType.NORMAL),
+        ]
+
+        self.assertEqual(sn1, r1)
+        self.assertEqual(sn2, r2)
+        self.assertEqual(sn3, r3)
+        self.assertEqual(sn4, r4)
+        self.assertEqual(sn5, r5)
 
 
 if __name__ == "__main__":
