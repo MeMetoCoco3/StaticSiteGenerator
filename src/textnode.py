@@ -42,6 +42,51 @@ def text_to_nodes(text: str) -> list[TextNode]:
     return node
 
 
+def markdown_to_blocks(text: str) -> list[str]:
+    split_text = text.split("\n\n")
+    for idx, line in enumerate(split_text):
+        split_text[idx] = line.strip()
+    # Remove empty strings
+    return [x for x in split_text if x != ""]
+
+
+def block_to_block_type(block_str: str) -> str:
+    match block_str[0]:
+        case "#":
+            c = 1
+            for i in block_str[1:6]:
+                if i == "#":
+                    c += 1
+                    continue
+                break
+            return f"H{c}"
+        case "`":
+            c = 1
+            for i in block_str[1:3]:
+                if i == "`":
+                    c += 1
+                    continue
+                break
+
+            if c == 3:
+                return "CODE"
+        case ">":
+            return "QUOTE"
+        case "*" | "-":
+            return "UL"
+
+        case _:
+            number = ""
+            for val in block_str:
+                if val.isnumeric():
+                    number = number + val
+                    continue
+                break
+            if number:
+                return number
+    return "NORMAL"
+
+
 def text_node_to_html_node(node: TextNode) -> LeafNode:
     match node.text_type:
         case TextType.NORMAL:
@@ -121,8 +166,29 @@ def split_nodes_links(old_nodes: list[TextNode]) -> list[TextNode]:
 
 
 def main():
-    n3 = "Let's include an image of this ![Sunset](https://i.imgur.com/uYVqVdL.jpeg) and the beautiful Earth: ![Earth Image](https://i.imgur.com/ExQH6XE.jpeg)"
-    print(text_to_nodes(n3))
+    n3 = """# This is a heading
+
+### This is a 3 heading
+
+######### THIS IS A NORMAL
+
+This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+```const std = @import("std")
+    pub fn main() void {
+        std.debug.print("This is zig code")
+    }
+```
+
+>Some random quote that we have over here yeayeaheayeayeyaeyae
+aeyayeyaeyaeyaeyae
+aeyaeyyeaye
+
+* This is the first list item in a list block
+* This is a list item
+* This is another list item"""
+    for i in markdown_to_blocks(n3):
+        print(block_to_block_type(i))
 
 
 main()

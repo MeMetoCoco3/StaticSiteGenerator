@@ -3,6 +3,8 @@ import unittest
 from textnode import (
     TextNode,
     TextType,
+    block_to_block_type,
+    markdown_to_blocks,
     split_nodes_images,
     split_nodes_links,
     text_node_to_html_node,
@@ -190,6 +192,53 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(sn3, r3)
         self.assertEqual(sn4, r4)
         self.assertEqual(sn5, r5)
+
+    def test_markdown_to_blocks(self):
+        n1 = """# This is a heading
+
+            This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+            * This is the first list item in a list block
+            * This is a list item
+            * This is another list item
+            """
+        r1 = [
+            "# This is a heading",
+            "This is a paragraph of text. It has some **bold** and *italic* words inside of it.",
+            """* This is the first list item in a list block
+            * This is a list item
+            * This is another list item""",
+        ]
+        self.assertEqual(markdown_to_blocks(n1), r1)
+
+    def test_block_to_block_type(self):
+        n1 = """# This is a heading
+
+            ### This is a 3 heading
+
+            ###### THIS IS 6H
+
+            This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+            ```const std = @import("std")
+                pub fn main() void {
+                    std.debug.print("This is zig code")
+                }
+            ```
+
+            >Some random quote that we have over here yeayeaheayeayeyaeyae
+            aeyayeyaeyaeyaeyae
+            aeyaeyyeaye
+
+            * This is the first list item in a list block
+            * This is a list item
+            * This is another list item"""
+
+        r1 = ["H1", "H3", "H6", "NORMAL", "CODE", "QUOTE", "UL"]
+
+        zipped = zip(markdown_to_blocks(n1), r1)
+        for q, a in zipped:
+            self.assertEqual(block_to_block_type(q), a)
 
 
 if __name__ == "__main__":
