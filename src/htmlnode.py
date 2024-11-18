@@ -52,8 +52,6 @@ class LeafNode(HTMLnode):
     def __init__(
         self, tag: str, value: str, props: dict[str, str] | None = None
     ) -> None:
-        # Cuidado aqui con el orden, que el HTMLnode acepta 4 argumentos, y
-        # le he estado pasado props, como children, desde hace 20 mins.
         super().__init__(tag, value, props=props)
 
     def to_html(self) -> str:
@@ -64,6 +62,8 @@ class LeafNode(HTMLnode):
             return self.value
         if self.tag == "img":
             return f"<{self.tag}{self.props_to_html()}>"
+        if self.tag == "codeblock":
+            return f"<pre><code>{self.value}</code></pre>"
         if self.props is None:
             return f"<{self.tag}>{self.value}</{self.tag}>"
         return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"

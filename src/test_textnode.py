@@ -1,15 +1,14 @@
 import unittest
 
-from textnode import (
-    TextNode,
-    TextType,
+from textnode import TextNode, TextType
+from conversion import (
     block_to_block_type,
     markdown_to_blocks,
     split_nodes_images,
     split_nodes_links,
     text_node_to_html_node,
     split_nodes_delimiter,
-    text_to_nodes,
+    markdown_to_nodes,
 )
 
 
@@ -137,18 +136,18 @@ class TestTextNode(unittest.TestCase):
 
         self.assertEqual(sn1, r1)
 
-    def test_text_to_node(self):
+    def test_markdown_to_node(self):
         n1 = "You can also use `inline code` to highlight specific parts of the text."
         n2 = "Here's an [example link](https://example.com) to a website."
         n3 = "Let's include an image of this ![Sunset](https://i.imgur.com/uYVqVdL.jpeg) and the beautiful Earth: ![Earth Image](https://i.imgur.com/ExQH6XE.jpeg)"
         n4 = "Now, let's add a mix of formats: Here's **bold**, *italic*, and a `code snippet` in a single line."
         n5 = "Finally, some closing text with another [helpful link](https://openai.com)."
 
-        sn1 = text_to_nodes(n1)
-        sn2 = text_to_nodes(n2)
-        sn3 = text_to_nodes(n3)
-        sn4 = text_to_nodes(n4)
-        sn5 = text_to_nodes(n5)
+        sn1 = markdown_to_nodes(n1)
+        sn2 = markdown_to_nodes(n2)
+        sn3 = markdown_to_nodes(n3)
+        sn4 = markdown_to_nodes(n4)
+        sn5 = markdown_to_nodes(n5)
 
         r1 = [
             TextNode("You can also use ", TextType.NORMAL),
@@ -207,7 +206,7 @@ class TestTextNode(unittest.TestCase):
             "This is a paragraph of text. It has some **bold** and *italic* words inside of it.",
             """* This is the first list item in a list block
             * This is a list item
-            * This is another list item""",
+            * This is another list item\n""",
         ]
         self.assertEqual(markdown_to_blocks(n1), r1)
 
@@ -234,7 +233,7 @@ class TestTextNode(unittest.TestCase):
             * This is a list item
             * This is another list item"""
 
-        r1 = ["H1", "H3", "H6", "NORMAL", "CODE", "QUOTE", "UL"]
+        r1 = ["H1", "H3", "H6", "p", "codeblock", "blockquote", "ul"]
 
         zipped = zip(markdown_to_blocks(n1), r1)
         for q, a in zipped:
