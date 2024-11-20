@@ -225,7 +225,7 @@ class TestTextNode(unittest.TestCase):
                 }
             ```
 
-            >Some random quote that we have over here yeayeaheayeayeyaeyae
+            > Some random quote that we have over here yeayeaheayeayeyaeyae
             aeyayeyaeyaeyaeyae
             aeyaeyyeaye
 

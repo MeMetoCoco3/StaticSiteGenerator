@@ -59,7 +59,7 @@ fmt.Println("Lets gooo!!")</code></pre>
 <blockquote><p>This is a blockquote.
 It can span multiple lines.</p></blockquote>
 <p>Unordered List:</p>
-<ul><li> Item 1</li>
-<li> Item 2</li></ul></div>"""
+<ul><li>Item 1</li>
+<li>Item 2</li></ul></div>"""
         a1 = html_nodes_finito(markdown_to_html_node(n1))
         self.assertEqual(r1, a1)

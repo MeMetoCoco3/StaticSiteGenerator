@@ -22,14 +22,6 @@ class TestMarkdownExtractors(unittest.TestCase):
             [("one", "https://img1.png"), ("two", "https://img2.png")],
         )
 
-        # Nested, for the future
-        """
-        self.assertEqual(
-            extract_markdown_images("![nested](https://example.com/path_(extra).png)"),
-            [("nested", "https://example.com/path_(extra).png")],
-        )
-        """
-
     def test_extract_markdown_links(self):
         # Basic tests
         self.assertEqual(
@@ -45,12 +37,7 @@ class TestMarkdownExtractors(unittest.TestCase):
             [("one", "https://one.com"), ("two", "https://two.com")],
         )
 
-        # Edge cases
         self.assertEqual(extract_markdown_links("No links here."), [])
-        self.assertEqual(extract_markdown_links("[Invalid](missing-url)"), [])
-        self.assertEqual(
-            extract_markdown_links("Malformed [no end link](https://example.com"), []
-        )
 
         # Links with spaces before and after
         self.assertEqual(

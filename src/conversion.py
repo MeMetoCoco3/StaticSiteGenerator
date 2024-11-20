@@ -1,12 +1,11 @@
 from textnode import TextNode, TextType
-from htmlnode import HTMLnode, LeafNode, ParentNode
+from htmlnode import LeafNode, ParentNode
 from extract import extract_markdown_images, extract_markdown_links
 
 
 # Calisify strings in textnodes.
 def markdown_to_nodes(text: str) -> list[TextNode]:
     node = [TextNode(text, TextType.NORMAL)]
-
     node = split_nodes_delimiter(node, "**", TextType.BOLD)
     node = split_nodes_delimiter(node, "*", TextType.ITALIC)
     node = split_nodes_delimiter(node, "`", TextType.CODE)
@@ -46,10 +45,14 @@ def block_to_block_type(block_str: str) -> str:
             if c == 3:
                 return "codeblock"
         case ">":
-            return "blockquote"
+            if block_str[1] == " ":
+                return "blockquote"
         case "*" | "-":
-            return "ul"
-
+            if block_str[1] == " ":
+                return "ul"
+    check_ordered_list = block_str[0].isnumeric() and block_str[1:3] == ". "
+    if check_ordered_list:
+        return "ol"
     return "p"
 
 
@@ -97,8 +100,10 @@ def text_node_to_html_node(node: TextNode) -> LeafNode:
             for index, line in enumerate(text):
                 text[index] = line.strip(" ")[2:]
             return LeafNode("blockquote", LeafNode("p", "\n".join(text)).to_html())
-        case TextType.UL | TextType.OL:
+        case TextType.UL:
             return LeafNode("ul", node.text)
+        case TextType.OL:
+            return LeafNode("ol", node.text)
         case TextType.CODEBLOCK:
             text = node.text.split("\n")
             for index, line in enumerate(text):
@@ -166,24 +171,53 @@ def split_nodes_links(old_nodes: list[TextNode]) -> list[TextNode]:
         if node.text_type == TextType.IMAGES:
             new_nodes.append(node)
             continue
-
         url_nodes = extract_markdown_links(node.text)
         cursor = 0
         for alt_text, link in url_nodes:
             i_formated = f"[{alt_text}]({link})"
             start_link = node.text.find(i_formated, cursor)
+
             if start_link > cursor:
                 new_nodes.append(TextNode(node.text[cursor:start_link], node.text_type))
+
             new_nodes.append(TextNode(alt_text, TextType.LINKS, link))
             cursor = start_link + len(i_formated)
-        if len(node.text) > cursor:
+        if len(node.text) > cursor or node.text is None:
             new_nodes.append(TextNode(node.text[cursor:], node.text_type))
     return new_nodes
 
 
-def list_to_html(ul: str) -> str:
+"""
+def ordered_list_to_html(ol: str) -> str:
+    splitted_ol = ol.split("\n")
+    for i, v in enumerate(splitted_ol):
+        formated_str = html_nodes_finito(markdown_to_nodes(v))
+        splitted_ol[i] = formated_str
+    formated_ol = map(lambda x: "<li>" + x[1:].strip(". ") + "</li>", splitted_ol)
+
+    return "\n".join(formated_ol)
+"""
+
+
+def ordered_list_to_html(ol: str) -> str:
+    splitted_ol = ol.split("\n")
+    for i, v in enumerate(splitted_ol):
+        node = list(map(text_node_to_html_node, markdown_to_nodes(v[2:])))
+
+        provisionary_list = []
+        provisionary_list.extend(node)
+
+        new_val = ParentNode("li", provisionary_list)
+        splitted_ol[i] = new_val.to_html()
+    return "\n".join(splitted_ol)
+
+
+def unordered_list_to_html(ul: str) -> str:
     splitted_ul = ul.split("\n")
-    formated_ul = map(lambda x: "<li>" + x.strip(" ")[1:] + "</li>", splitted_ul)
+    for i, v in enumerate(splitted_ul):
+        formated_str = html_nodes_finito(markdown_to_nodes(v[2:]))
+        splitted_ul[i] = formated_str
+    formated_ul = map(lambda x: "<li>" + x.strip("-* ") + "</li>", splitted_ul)
 
     return "\n".join(formated_ul)
 
@@ -196,10 +230,23 @@ def markdown_to_html_node(md_text: str) -> list[TextNode]:
         match block_type:
             case "p":
                 html_nodes.extend(markdown_to_nodes(block))
-            case "ul" | "ol":
+            case "ul":
                 html_nodes.extend(
-                    [TextNode(list_to_html(block), blocktype_to_type(block_type))]
+                    [
+                        TextNode(
+                            unordered_list_to_html(block), blocktype_to_type(block_type)
+                        )
+                    ]
                 )
+            case "ol":
+                html_nodes.extend(
+                    [
+                        TextNode(
+                            ordered_list_to_html(block), blocktype_to_type(block_type)
+                        )
+                    ]
+                )
+
             case _:
                 html_nodes.extend([TextNode(block, blocktype_to_type(block_type))])
 
@@ -219,7 +266,6 @@ def html_nodes_finito(nodes: list[TextNode]) -> str:
             )
             html_template.append(previous_parent.to_html())
             current_childs = []
-
         if nodes[count].text_type in [
             TextType.NORMAL,
             TextType.BOLD,
