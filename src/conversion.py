@@ -99,7 +99,7 @@ def text_node_to_html_node(node: TextNode) -> LeafNode:
             text = node.text.split("\n")
             for index, line in enumerate(text):
                 text[index] = line.strip(" ")[2:]
-            return LeafNode("blockquote", LeafNode("p", "\n".join(text)).to_html())
+            return LeafNode("blockquote", "\n".join(text))
         case TextType.UL:
             return LeafNode("ul", node.text)
         case TextType.OL:
@@ -187,18 +187,6 @@ def split_nodes_links(old_nodes: list[TextNode]) -> list[TextNode]:
     return new_nodes
 
 
-"""
-def ordered_list_to_html(ol: str) -> str:
-    splitted_ol = ol.split("\n")
-    for i, v in enumerate(splitted_ol):
-        formated_str = html_nodes_finito(markdown_to_nodes(v))
-        splitted_ol[i] = formated_str
-    formated_ol = map(lambda x: "<li>" + x[1:].strip(". ") + "</li>", splitted_ol)
-
-    return "\n".join(formated_ol)
-"""
-
-
 def ordered_list_to_html(ol: str) -> str:
     splitted_ol = ol.split("\n")
     for i, v in enumerate(splitted_ol):
@@ -208,10 +196,27 @@ def ordered_list_to_html(ol: str) -> str:
         provisionary_list.extend(node)
 
         new_val = ParentNode("li", provisionary_list)
-        splitted_ol[i] = new_val.to_html()
+        one_less_space = new_val.to_html()
+        splitted_ol[i] = one_less_space[:4] + one_less_space[5:]
     return "\n".join(splitted_ol)
 
 
+def unordered_list_to_html(ul: str) -> str:
+    splitted_ul = ul.split("\n")
+    for i, v in enumerate(splitted_ul):
+        node = list(map(text_node_to_html_node, markdown_to_nodes(v[2:])))
+
+        provisionary_list = []
+        provisionary_list.extend(node)
+
+        new_val = ParentNode("li", provisionary_list)
+
+        splitted_ul[i] = new_val.to_html()
+
+    return "\n".join(splitted_ul)
+
+
+"""
 def unordered_list_to_html(ul: str) -> str:
     splitted_ul = ul.split("\n")
     for i, v in enumerate(splitted_ul):
@@ -220,6 +225,7 @@ def unordered_list_to_html(ul: str) -> str:
     formated_ul = map(lambda x: "<li>" + x.strip("-* ") + "</li>", splitted_ul)
 
     return "\n".join(formated_ul)
+"""
 
 
 def markdown_to_html_node(md_text: str) -> list[TextNode]:
